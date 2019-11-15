@@ -33,7 +33,7 @@
 #include <linux/sched.h>
 #include <linux/slab.h>
 
-#define SPI_AD7616_CS				0
+#define SPI_AD7616_CS 0
 
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
@@ -72,12 +72,12 @@ static const char adc_channels[][20] = {
 /* ad7616 device */
 // struct ad7616_dev dev;
 
- static struct axi_adc_dev *axi_adc_dev;
- static int dev_index = 0;
- static dev_t devno;
- static struct cdev adc_cdev;
- static struct class *axi_adc_class;
- static void dma_slave_rx_callback(void *completion) { complete(completion); }
+static struct axi_adc_dev *axi_adc_dev;
+static int dev_index = 0;
+static dev_t devno;
+static struct cdev adc_cdev;
+static struct class *axi_adc_class;
+static void dma_slave_rx_callback(void *completion) { complete(completion); }
 
 /* request gpios */
 static int ad7616_request_gpios() {
@@ -96,6 +96,9 @@ static int ad7616_reset() {
     gpiod_set_value(axi_adc_dev->ad7616_dev->gpio_reset, 1);
     ndelay(100); /* t_reset >= 100ns */
     gpiod_set_value(axi_adc_dev->ad7616_dev->gpio_reset, 0);
+    /* AD7616 requires at least 15ms to reconfigure after a reset */
+    mdelay(15);
+    gpiod_set_value(axi_adc_dev->ad7616_dev->gpio_reset, 1);
     return 0;
   }
   return -ENODEV;
@@ -482,6 +485,9 @@ static int axi_adc_probe(struct platform_device *pdev) {
                    axi_adc_dev->master);
   dev_info(&pdev->dev, "SPI Engine successfully initialized\n");
 
+  /* reset */
+  ad7616_reset();
+
   /* ad7616 device setup */
   ad7616_setup(axi_adc_dev, default_init_param);
 
@@ -516,7 +522,7 @@ static struct platform_driver axi_ad7616_dma_of_driver = {
 
 module_platform_driver(axi_ad7616_dma_of_driver);
 
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("GPL v2");
 MODULE_DESCRIPTION("AIRS AXI AD7616 DMA driver");
-MODULE_AUTHOR("AIRS, Inc.");
+MODULE_AUTHOR("Johnny, AIRS.");
 MODULE_VERSION("1.00a");

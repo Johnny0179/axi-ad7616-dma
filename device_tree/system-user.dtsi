@@ -1,0 +1,36 @@
+/include/ "system-conf.dtsi"
+/ {
+
+};
+
+&axi_ad7616_0{
+    compatible = "airs,axi-ad7616-dma";
+    clock-names = "s_axi_aclk";
+	clocks = <&clkc 15>;
+    /* DMA */
+    dmas = <&axi_dma_0 0>;
+	dma-names = "axidma1";
+    // interrupt-names = "s2mm_introut";
+    /* 
+    *The 1st cell is the interrupt type; 0 for SPI interrupts, 1 for PPI
+    *interrupts.
+
+    *The 2nd cell contains the interrupt number for the interrupt type.
+    *SPI interrupts are in the range [0-987].  PPI interrupts are in the
+    *range [0-15].
+
+    *The 3rd cell is the flags, encoded as follows:
+	bits[3:0] trigger type and level flags.
+		1 = low-to-high edge triggered
+		2 = high-to-low edge triggered (invalid for SPIs)
+		4 = active high level-sensitive
+		8 = active low level-sensitive (invalid for SPIs).
+     */
+
+    //ad7616 rset pin, 54 is the first EMIO pin number, 0->high level
+    reset-gpios=<&gpio0 54 0>;
+    /* SPI engine */
+	interrupt-parent = <&intc>;
+	interrupts = <0 29 4>;
+	reg = <0x43c00000 0x10000>;
+};
