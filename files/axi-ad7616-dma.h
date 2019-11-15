@@ -3,20 +3,21 @@
 
 #include <linux/delay.h>
 #include <linux/kernel.h>
-#include <stdint.h>
-#include <unistd.h>
+// #include <stdint.h>
+// #include <unistd.h>
 #include "ad7616.h"
 #include <linux/gpio/consumer.h>
 // #include "ad7616_core.h"
 #include "spi_engine_linux.h"
-
+#include <linux/dma-mapping.h>
+#include <linux/dmaengine.h>
 #include <linux/clk.h>
 #include <linux/interrupt.h>
 #include <linux/io.h>
 #include <linux/of.h>
 #include <linux/spi/spi.h>
 
-#define MODULE_NAME "axi_ad7616_dma"
+#define MODULE_NAME "axi-ad7616-dma"
 #define AXI_ADC_MINOR_START 0
 #define AXI_ADC_MINOR_COUNT 16
 #define AXI_ADC_CALLBACK_TIMEOUTMSEC 10000
@@ -116,7 +117,7 @@ struct axi_adc_dev {
   struct ad7616_dev *ad7616_dev;
 };
 
-int axi_ad7616_dma_init();
+// int axi_ad7616_dma_init();
 // void ad7616_capture_serial();
 
 #endif

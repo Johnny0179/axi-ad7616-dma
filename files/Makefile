@@ -2,7 +2,7 @@ DRIVER_NAME=axi-ad7616-dma
 
 obj-m := $(DRIVER_NAME).o
 
-$(DRIVER_NAME)-objs=axi-ad7616-dma.o ad7616.o ad7616_core.o spi_engine_linux.o
+$(DRIVER_NAME)-objs=axi-ad7616-dma.o ad7616.o  spi_engine_linux.o
 
 SRC := $(shell pwd)
 

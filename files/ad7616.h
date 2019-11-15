@@ -2,10 +2,13 @@
 #ifndef AD7616_H_
 #define AD7616_H_
 
-#include <stdin.h>
-#include "axi-ad7616-dma.h"
-#include "spi_engine_linux.h"
+// #include <stdin.h>
 
+#include "spi_engine_linux.h"
+#include <linux/spi/spi.h>
+#include "axi-ad7616-dma.h"
+
+// extern struct axi_adc_dev *axi_adc_dev;
 /******************************************************************************/
 /********************** Macros and Constants Definitions **********************/
 /******************************************************************************/
@@ -115,19 +118,19 @@ struct ad7616_dev {
 
 struct ad7616_init_param {
   /* SPI */
-  uint8_t spi_chip_select;
-  spi_mode spi_mode;
-  spi_type spi_type;
-  uint32_t spi_device_id;
-  /* GPIO */
-  gpio_type gpio_type;
-  uint32_t gpio_device_id;
-  int8_t gpio_hw_rngsel0;
-  int8_t gpio_hw_rngsel1;
-  int8_t gpio_reset;
-  int8_t gpio_os0;
-  int8_t gpio_os1;
-  int8_t gpio_os2;
+  // uint8_t spi_chip_select;
+  // spi_mode spi_mode;
+  // spi_type spi_type;
+  // uint spi_device_id;
+  // /* GPIO */
+  // gpio_type gpio_type;
+  // uint gpio_device_id;
+  // int8_t gpio_hw_rngsel0;
+  // int8_t gpio_hw_rngsel1;
+  // int8_t gpio_reset;
+  // int8_t gpio_os0;
+  // int8_t gpio_os1;
+  // int8_t gpio_os2;
   /* Device Settings */
   ad7616_mode mode;
   ad7616_range va[8];
@@ -139,45 +142,44 @@ struct ad7616_init_param {
 /************************ Functions Declarations ******************************/
 /******************************************************************************/
 /* SPI read from device. */
-int32_t ad7616_read(struct spi_engine *master, struct ad7616_dev *dev,
+int ad7616_read(struct spi_master *master, struct ad7616_dev *dev,
                     uint8_t reg_addr, uint16_t *reg_data);
 /* SPI write to device. */
-int32_t ad7616_write(struct spi_engine *master, struct ad7616_dev *dev,
+int ad7616_write(struct spi_master *master, struct ad7616_dev *dev,
                      uint8_t reg_addr, uint16_t reg_data);
 /* SPI read from device using a mask. */
-int32_t ad7616_read_mask(struct spi_engine *master, struct ad7616_dev *dev,
+int ad7616_read_mask(struct spi_master *master, struct ad7616_dev *dev,
                          uint8_t reg_addr, uint16_t mask, uint16_t *data);
 /* SPI write to device using a mask. */
-int32_t ad7616_write_mask(struct spi_engine *master, struct ad7616_dev *dev,
+int ad7616_write_mask(struct spi_master *master, struct ad7616_dev *dev,
                           uint8_t reg_addr, uint16_t mask, uint16_t data);
 /* SPI read from device. */
-int32_t ad7616_spi_read(struct spi_engine *master, struct ad7616_dev *dev,
+int ad7616_spi_read(struct spi_master *master, struct ad7616_dev *dev,
                         uint8_t reg_addr, uint16_t *reg_data);
 /* SPI write to device. */
-int32_t ad7616_spi_write(struct spi_engine *master, struct ad7616_dev *dev,
+int ad7616_spi_write(struct spi_master *master, struct ad7616_dev *dev,
                          uint8_t reg_addr, uint16_t reg_data);
 /* PAR read from device. */
-int32_t ad7616_par_read(struct ad7616_dev *dev, uint8_t reg_addr,
+int ad7616_par_read(struct ad7616_dev *dev, uint8_t reg_addr,
                         uint16_t *reg_data);
 /* PAR write to device. */
-int32_t ad7616_par_write(struct ad7616_dev *dev, uint8_t reg_addr,
+int ad7616_par_write(struct ad7616_dev *dev, uint8_t reg_addr,
                          uint16_t reg_data);
 /* Perform a full reset of the device. */
-int32_t ad7616_reset(struct ad7616_dev *dev);
+int ad7616_reset(struct ad7616_dev *dev);
 /* Set the analog input range for the selected analog input channel. */
-int32_t ad7616_set_range(struct spi_engine *master, struct ad7616_dev *dev,
+int ad7616_set_range(struct spi_master *master, struct ad7616_dev *dev,
                          ad7616_ch ch, ad7616_range range);
 /* Set the operation mode (software or hardware). */
-int32_t ad7616_set_mode(struct spi_engine *master, struct ad7616_dev *dev,
+int ad7616_set_mode(struct spi_master *master, struct ad7616_dev *dev,
                         ad7616_mode mode);
 /* Set the oversampling ratio. */
-int32_t ad7616_set_oversampling_ratio(struct spi_engine *master,
+int ad7616_set_oversampling_ratio(struct spi_master *master,
                                       struct ad7616_dev *dev, ad7616_osr osr);
 /* Initialize the device. */
-// int32_t ad7616_setup(ad7616_dev **device, adc_core *core,
+// int ad7616_setup(ad7616_dev **device, adc_core *core,
 //                      ad7616_init_param init_param);
 
-void ad7616_setup(struct axi_adc_dev *axi_adc_dev,
-                  struct ad7616_init_param init_param);
+void ad7616_setup(struct ad7616_init_param init_param);
 
 #endif

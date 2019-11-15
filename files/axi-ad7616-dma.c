@@ -33,26 +33,26 @@
 #include <linux/sched.h>
 #include <linux/slab.h>
 
-
+#define SPI_AD7616_CS				0
 
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
 /******************************************************************************/
 struct ad7616_init_param default_init_param = {
     /* SPI */
-    SPI_AD7616_CS,  // spi_chip_select
-    SPI_MODE_2,     // spi_mode
-    SPI_ENGINE,     // spi_type
-    -1,             // spi_device_id
-    /* GPIO */
-    PS7_GPIO,          // gpio_type
-    GPIO_DEVICE_ID,    // gpio_device_id
-    -1,                // gpio_hw_rngsel0
-    -1,                // gpio_hw_rngsel1
-    GPIO_ADC_RESET_N,  // gpio_reset
-    -1,                // gpio_os0
-    -1,                // gpio_os1
-    -1,                // gpio_os2
+    // SPI_AD7616_CS,  // spi_chip_select
+    // SPI_MODE_2,     // spi_mode
+    // SPI_ENGINE,     // spi_type
+    // -1,             // spi_device_id
+    // /* GPIO */
+    // PS7_GPIO,          // gpio_type
+    // GPIO_DEVICE_ID,    // gpio_device_id
+    // -1,                // gpio_hw_rngsel0
+    // -1,                // gpio_hw_rngsel1
+    // GPIO_ADC_RESET_N,  // gpio_reset
+    // -1,                // gpio_os0
+    // -1,                // gpio_os1
+    // -1,                // gpio_os2
     /* Device Settings */
     AD7616_SW,  // mode
     {AD7616_10V, AD7616_10V, AD7616_10V, AD7616_10V, AD7616_10V, AD7616_10V,
@@ -72,15 +72,15 @@ static const char adc_channels[][20] = {
 /* ad7616 device */
 // struct ad7616_dev dev;
 
-static struct axi_adc_dev *axi_adc_dev;
-static int dev_index = 0;
-static dev_t devno;
-static struct cdev adc_cdev;
-static struct class *axi_adc_class;
-static void dma_slave_rx_callback(void *completion) { complete(completion); }
+ static struct axi_adc_dev *axi_adc_dev;
+ static int dev_index = 0;
+ static dev_t devno;
+ static struct cdev adc_cdev;
+ static struct class *axi_adc_class;
+ static void dma_slave_rx_callback(void *completion) { complete(completion); }
 
 /* request gpios */
-static int ad7616_request_gpios(struct axi_adc_dev *axi_adc_dev) {
+static int ad7616_request_gpios() {
   struct device *dev = axi_adc_dev->pdev->dev;
 
   // reset pin
@@ -91,7 +91,7 @@ static int ad7616_request_gpios(struct axi_adc_dev *axi_adc_dev) {
 }
 
 // ad7616 rst
-static int ad7616_reset(struct axi_adc_dev *axi_adc_dev) {
+static int ad7616_reset() {
   if (axi_adc_dev->ad7616_dev->gpio_reset) {
     gpiod_set_value(axi_adc_dev->ad7616_dev->gpio_reset, 1);
     ndelay(100); /* t_reset >= 100ns */
@@ -108,7 +108,7 @@ static void ad7616_core_setup() {
   axi_adc_dev->ad7616_dev->core->no_of_channels = 2;
   axi_adc_dev->ad7616_dev->core->resolution = 16;
 
-  writel(0x00, axi_adc_dev->adc_virtaddr + AD7616_REG_UP_CTRL);
+  writel(0x00, &axi_adc_dev->adc_virtaddr + AD7616_REG_UP_CTRL);
   mdelay(10);
   writel(AD7616_CTRL_RESETN, axi_adc_dev->adc_virtaddr + AD7616_REG_UP_CTRL);
   writel(100, axi_adc_dev->adc_virtaddr + AD7616_REG_UP_CONV_RATE);
@@ -168,10 +168,9 @@ static void ad7616_capture_serial() {
 }
 
 /* ad7616 device setup */
-void ad7616_setup(struct axi_adc_dev *axi_adc_dev,
-                  struct ad7616_init_param init_param) {
+void ad7616_setup(struct ad7616_init_param init_param) {
   int ret = 0;
-  u8 i = 0;
+  uint8_t i = 0;
 
   // set device mode
   axi_adc_dev->ad7616_dev->mode = init_param.mode;
@@ -406,6 +405,8 @@ static int axi_adc_probe(struct platform_device *pdev) {
 
   spi_master_set_devdata(master, axi_adc_dev->spi_engine);
 
+  spin_lock_init(&axi_adc_dev->spi_engine->lock);
+
   /*Memset
    *用来对一段内存空间全部设置为某个字符，一般用在对定义的字符串进行初始化为‘
    *’或‘/0’； 例:char a[100];memset(a, ‘/0’, sizeof(a));
@@ -471,7 +472,7 @@ static int axi_adc_probe(struct platform_device *pdev) {
   // dev_index++;
 
   // Initializing AXI DMA
-  axi_ad7616_dma_init();
+  // axi_ad7616_dma_init();
 
   /* ad7616 core setup */
   ad7616_core_setup();

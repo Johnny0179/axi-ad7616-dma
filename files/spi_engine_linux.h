@@ -2,6 +2,15 @@
 #define SPI_ENGINE_LINUX_H
 
 #include "axi-ad7616-dma.h"
+#include <linux/clk.h>
+#include <linux/interrupt.h>
+#include <linux/io.h>
+#include <linux/of.h>
+#include <linux/module.h>
+#include <linux/platform_device.h>
+#include <linux/spi/spi.h>
+
+extern struct spi_engine *master;
 
 /* spi engine */
 #define SPI_ENGINE_VERSION_MAJOR(x) ((x >> 16) & 0xff)
@@ -150,10 +159,10 @@ bool spi_engine_write_tx_fifo(struct spi_engine *spi_engine);
 
 bool spi_engine_read_rx_fifo(struct spi_engine *spi_engine);
 
-void spi_engine_setup(int irq, struct axi_adc_dev *axi_adc_dev,
+int spi_engine_setup(int irq, struct axi_adc_dev *axi_adc_dev,
                       struct spi_engine *spi_engine, struct spi_master *master);
 
-int32_t spi_engine_write_and_read(struct spi_engine *master, uint8_t ss,
+int32_t spi_engine_write_and_read(struct spi_master *master, uint8_t ss,
                                   uint8_t *data, uint8_t bytes_number);
 
 int32_t spi_engine_write(uint32_t reg_addr, uint32_t reg_data);

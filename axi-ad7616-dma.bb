@@ -7,10 +7,8 @@ inherit module
 
 SRC_URI = "file://Makefile \
            file://axi-ad7616-dma.c \
-           file://ad7616_core.c \
            file://spi_engine_linux.c \
            file://ad7616.c \
-           file://ad7616_core.h \
            file://ad7616.h \
            file://axi-ad7616-dma.h \
            file://spi_engine_linux.h \

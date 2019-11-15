@@ -316,19 +316,19 @@ bool spi_engine_read_rx_fifo(struct spi_engine *spi_engine) {
 }
 
 /* spi engine setup */
-void spi_engine_setup(int irq, struct axi_adc_dev *axi_adc_dev,
-                      struct spi_engine *spi_engine,
-                      struct spi_master *master) {
+int spi_engine_setup(int irq, struct axi_adc_dev *axi_adc_dev,
+                     struct spi_engine *spi_engine, struct spi_master *master) {
   unsigned int version;
   int ret;
+  struct device *dev = &axi_adc_dev->pdev->dev;
   /* setup spi engine */
   axi_adc_dev->spi_engine->base = axi_adc_dev->adc_virtaddr;
   version = readl_relaxed(spi_engine->base + SPI_ENGINE_REG_VERSION);
   if (SPI_ENGINE_VERSION_MAJOR(version) != 1) {
-    dev_err(
-        &axi_adc_dev->pdev->dev, "Unsupported peripheral version %u.%u.%c\n",
-        SPI_ENGINE_VERSION_MAJOR(version), SPI_ENGINE_VERSION_MINOR(version),
-        SPI_ENGINE_VERSION_PATCH(version));
+    dev_err(dev, "Unsupported peripheral version %u.%u.%c\n",
+            SPI_ENGINE_VERSION_MAJOR(version),
+            SPI_ENGINE_VERSION_MINOR(version),
+            SPI_ENGINE_VERSION_PATCH(version));
     return -ENODEV;
   }
 
@@ -338,19 +338,17 @@ void spi_engine_setup(int irq, struct axi_adc_dev *axi_adc_dev,
       goto err_put_master;
     } */
 
-  /*   spi_engine->ref_clk = devm_clk_get(&axi_adc_dev->pdev->dev, "spi_clk");
-    if (IS_ERR(spi_engine->ref_clk)) {
-      ret = PTR_ERR(spi_engine->ref_clk);
-      goto err_put_master;
-    } */
-  //   ref_clk fixed to 100 000 000
-  spi_engine->ref_clk = 100000000;
+  /*     spi_engine->ref_clk = devm_clk_get(&axi_adc_dev->pdev->dev, "spi_clk");
+      if (IS_ERR(spi_engine->ref_clk)) {
+        ret = PTR_ERR(spi_engine->ref_clk);
+        goto err_put_master;
+      } */
 
   /*   ret = clk_prepare_enable(spi_engine->clk);
     if (ret) goto err_put_master; */
 
-  ret = clk_prepare_enable(spi_engine->ref_clk);
-  if (ret) goto err_clk_disable;
+  /*   ret = clk_prepare_enable(spi_engine->ref_clk);
+    if (ret) goto err_clk_disable; */
 
   writel_relaxed(0x00, spi_engine->base + SPI_ENGINE_REG_RESET);
   writel_relaxed(0xff, spi_engine->base + SPI_ENGINE_REG_INT_PENDING);
@@ -363,7 +361,7 @@ void spi_engine_setup(int irq, struct axi_adc_dev *axi_adc_dev,
   master->dev.of_node = axi_adc_dev->pdev->dev.of_node;
   master->mode_bits = SPI_CPOL | SPI_CPHA | SPI_3WIRE;
   master->bits_per_word_mask = SPI_BPW_MASK(8);
-  master->max_speed_hz = clk_get_rate(spi_engine->ref_clk) / 2;
+  master->max_speed_hz = 100000000 / 2;
   master->transfer_one_message = spi_engine_transfer_one_message;
   master->num_chipselect = 8;
 
@@ -378,15 +376,16 @@ void spi_engine_setup(int irq, struct axi_adc_dev *axi_adc_dev,
 err_free_irq:
   free_irq(irq, master);
 err_ref_clk_disable:
-//   clk_disable_unprepare(spi_engine->ref_clk);
-/* err_clk_disable:
-  clk_disable_unprepare(spi_engine->clk); */
-err_put_master:
-  spi_master_put(master);
+  dev_err(dev, "can't get the irq!\n");
+  //   clk_disable_unprepare(spi_engine->ref_clk);
+  /* err_clk_disable:
+    clk_disable_unprepare(spi_engine->clk); */
+  // err_put_master:
+  //   spi_master_put(master);
   return ret;
 }
 
-int32_t spi_engine_write_and_read(struct spi_engine *master, uint8_t ss,
+int32_t spi_engine_write_and_read(struct spi_master *master, uint8_t ss,
                                   uint8_t *data, uint8_t bytes_number) {
   uint32_t expected_id = 0;
   uint32_t i;
@@ -415,15 +414,13 @@ int32_t spi_engine_write_and_read(struct spi_engine *master, uint8_t ss,
   xfer->rx_buf = rx;
 
   // expected_id = spi.sync_id + 1;ok
-  expected_id = master->sync_id + 1;
+  // expected_id = master->sync_id + 1;
   // spi.completed_id = 0xFFFFFFFF;ok
-  master->completed_id = 0xFFFFFFFF;
+  // master->completed_id = 0xFFFFFFFF;
 
   // msg.tx_length = bytes_number;ok
-  master->tx_length = bytes_number;
-
   // msg.rx_length = bytes_number;ok
-  master->rx_length = bytes_number;
+  xfer->len = bytes_number;
 
   // msg.rx_buf = rx; ok
   xfer->rx_buf = rx;
@@ -434,12 +431,10 @@ int32_t spi_engine_write_and_read(struct spi_engine *master, uint8_t ss,
   // spi_engine_transfer_one_message(&msg);
   spi_engine_transfer_one_message(master, msg);
 
-  while (master->completed_id != expected_id)
-    ;
+  /* while (master->completed_id != expected_id)
+    ; */
 
   for (i = 0; i < bytes_number; i++) data[i] = rx[i];
 
   return 0;
 }
-
-

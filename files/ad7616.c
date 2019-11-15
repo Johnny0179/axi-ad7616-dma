@@ -49,7 +49,7 @@
  * @param reg_data - The register data.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7616_read(struct spi_engine *master,struct ad7616_dev *dev,
+int ad7616_read(struct spi_master *master,struct ad7616_dev *dev,
 					uint8_t reg_addr,
 					uint16_t *reg_data)
 {
@@ -66,7 +66,7 @@ int32_t ad7616_read(struct spi_engine *master,struct ad7616_dev *dev,
  * @param reg_data - The register data.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7616_write(struct spi_engine *master,struct ad7616_dev *dev,
+int ad7616_write(struct spi_master *master,struct ad7616_dev *dev,
 					 uint8_t reg_addr,
 					 uint16_t reg_data)
 {
@@ -84,13 +84,13 @@ int32_t ad7616_write(struct spi_engine *master,struct ad7616_dev *dev,
  * @param data - The register data.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7616_read_mask(struct spi_engine *master,struct ad7616_dev *dev,
+int ad7616_read_mask(struct spi_master *master,struct ad7616_dev *dev,
 						 uint8_t reg_addr,
 						 uint16_t mask,
 						 uint16_t *data)
 {
 	uint16_t reg_data;
-	int32_t ret;
+	int ret;
 
 	// if (dev->interface == AD7616_SERIAL)
 		ret = ad7616_spi_read(master,dev, reg_addr, &reg_data);
@@ -109,13 +109,13 @@ int32_t ad7616_read_mask(struct spi_engine *master,struct ad7616_dev *dev,
  * @param data - The register data.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7616_write_mask(struct spi_engine *master,struct ad7616_dev *dev,
+int ad7616_write_mask(struct spi_master *master,struct ad7616_dev *dev,
 						  uint8_t reg_addr,
 						  uint16_t mask,
 						  uint16_t data)
 {
 	uint16_t reg_data;
-	int32_t ret;
+	int ret;
 
 	// if (dev->interface == AD7616_SERIAL)
 		ret = ad7616_spi_read(master,dev, reg_addr, &reg_data);
@@ -126,7 +126,7 @@ int32_t ad7616_write_mask(struct spi_engine *master,struct ad7616_dev *dev,
 	reg_data |= data;
 
 	// if (dev->interface == AD7616_SERIAL)
-		ret |= ad7616_spi_write(dev, reg_addr, reg_data);
+		ret |= ad7616_spi_write(master,dev, reg_addr, reg_data);
 	// else
 		// ret |= ad7616_par_write(dev, reg_addr, reg_data);
 
@@ -140,12 +140,12 @@ int32_t ad7616_write_mask(struct spi_engine *master,struct ad7616_dev *dev,
  * @param reg_data - The register data.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7616_spi_read(struct spi_engine *master,struct ad7616_dev *dev,
+int ad7616_spi_read(struct spi_master *master,struct ad7616_dev *dev,
 						uint8_t reg_addr,
 						uint16_t *reg_data)
 {
 	uint8_t buf[2];
-	int32_t ret;
+	int ret;
 	uint8_t ss=0;
 
 	buf[0] = 0x00 | ((reg_addr & 0x3F) << 1);
@@ -170,12 +170,12 @@ int32_t ad7616_spi_read(struct spi_engine *master,struct ad7616_dev *dev,
  * @param reg_data - The register data.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7616_spi_write(struct spi_engine *master,struct ad7616_dev *dev,
+int ad7616_spi_write(struct spi_master *master,struct ad7616_dev *dev,
 						 uint8_t reg_addr,
 						 uint16_t reg_data)
 {
 	uint8_t buf[2];
-	int32_t ret;
+	int ret;
 	uint8_t ss=0;
 
 	buf[0] = 0x80 | ((reg_addr & 0x3F) << 1) | ((reg_data & 0x100) >> 8);
@@ -193,18 +193,18 @@ int32_t ad7616_spi_write(struct spi_engine *master,struct ad7616_dev *dev,
  * @param reg_data - The register data.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7616_par_read(struct ad7616_dev *dev,
+int ad7616_par_read(struct ad7616_dev *dev,
 						uint8_t reg_addr,
 						uint16_t *reg_data)
 {
-	uint32_t read;
+	// uint read;
 
-	ad7616_core_write(*dev->core, AD7616_REG_UP_WRITE_DATA,
-			0x0000 | ((reg_addr & 0x3F) << 9));
-	usleep(50);
-	ad7616_core_read(*dev->core, AD7616_REG_UP_READ_DATA, &read);
-	*reg_data = read & 0xFF;
-	mdelay(1);
+	// ad7616_core_write(*dev->core, AD7616_REG_UP_WRITE_DATA,
+	// 		0x0000 | ((reg_addr & 0x3F) << 9));
+	// usleep(50);
+	// ad7616_core_read(*dev->core, AD7616_REG_UP_READ_DATA, &read);
+	// *reg_data = read & 0xFF;
+	// mdelay(1);
 
 	return 0;
 }
@@ -216,13 +216,13 @@ int32_t ad7616_par_read(struct ad7616_dev *dev,
  * @param reg_data - The register data.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7616_par_write(struct ad7616_dev *dev,
+int ad7616_par_write(struct ad7616_dev *dev,
 						 uint8_t reg_addr,
 						 uint16_t reg_data)
 {
-	ad7616_core_write(*dev->core, AD7616_REG_UP_WRITE_DATA,
-			0x8000 | ((reg_addr & 0x3F) << 9) | (reg_data & 0xFF));
-	mdelay(1);
+	// ad7616_core_write(*dev->core, AD7616_REG_UP_WRITE_DATA,
+	// 		0x8000 | ((reg_addr & 0x3F) << 9) | (reg_data & 0xFF));
+	// mdelay(1);
 
 	return 0;
 }
@@ -232,18 +232,18 @@ int32_t ad7616_par_write(struct ad7616_dev *dev,
  * @param dev - The device structure.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7616_reset(struct ad7616_dev *dev)
+int ad7616_reset(struct ad7616_dev *dev)
 {
-	int32_t ret;
+	// int ret;
 
-	ret = gpio_set_value(&dev->gpio_dev, dev->gpio_reset, GPIO_LOW);
-	/* Low pulse width for a full reset should be at least 1200 ns */
-	mdelay(20);
-	ret |= gpio_set_value(&dev->gpio_dev, dev->gpio_reset, GPIO_HIGH);
-	/* 15 ms are required to completely reconfigure the device */
-	mdelay(150);
+	// ret = gpio_set_value(&dev->gpio_dev, dev->gpio_reset, GPIO_LOW);
+	// /* Low pulse width for a full reset should be at least 1200 ns */
+	// mdelay(20);
+	// ret |= gpio_set_value(&dev->gpio_dev, dev->gpio_reset, GPIO_HIGH);
+	// /* 15 ms are required to completely reconfigure the device */
+	// mdelay(150);
 
-	return ret;
+	return 0;
 }
 
 /**
@@ -272,15 +272,14 @@ int32_t ad7616_reset(struct ad7616_dev *dev)
  * 								   AD7616_10V
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7616_set_range(struct spi_engine *master,struct ad7616_dev *dev,
+int ad7616_set_range(struct spi_master *master,struct ad7616_dev *dev,
 						 ad7616_ch ch,
 						 ad7616_range range)
 {
 	uint8_t	reg_addr;
 	uint8_t	mask;
 	uint8_t	data;
-	uint8_t i;
-	int32_t ret;
+	int ret;
 
 	// if (dev->mode == AD7616_SW) {
 		if (ch <= AD7616_VA7) {
@@ -330,11 +329,11 @@ int32_t ad7616_set_range(struct spi_engine *master,struct ad7616_dev *dev,
  * 								  AD7616_HW
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7616_set_mode(struct spi_engine *master,struct ad7616_dev *dev,
+int ad7616_set_mode(struct spi_master *master,struct ad7616_dev *dev,
 						ad7616_mode mode)
 {
 	uint8_t i;
-	int32_t ret = 0;
+	int ret = 0;
 
 	dev->mode = mode;
 	for (i = 0; i <= AD7616_VA7; i++) {
@@ -359,10 +358,10 @@ int32_t ad7616_set_mode(struct spi_engine *master,struct ad7616_dev *dev,
  * 								 AD7616_OSR_128
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7616_set_oversampling_ratio(struct spi_engine *master,struct ad7616_dev *dev,
+int ad7616_set_oversampling_ratio(struct spi_master *master,struct ad7616_dev *dev,
 									  ad7616_osr osr)
 {
-	int32_t ret = 0;
+	int ret = 0;
 
 	// if (dev->mode == AD7616_SW) {
 		ret = ad7616_write_mask(master,dev, AD7616_REG_CONFIG,
@@ -386,14 +385,14 @@ int32_t ad7616_set_oversampling_ratio(struct spi_engine *master,struct ad7616_de
  * 					   parameters.
  * @return 0 in case of success, negative error code otherwise.
  */
-/* int32_t ad7616_setup(struct ad7616_dev **device,
+/* int ad7616_setup(struct ad7616_dev **device,
 					 adc_core *core,
 					 ad7616_init_param init_param)
 {
 	ad7616_dev *dev;
 	uint8_t i;
-	uint32_t if_type;
-	int32_t ret = 0;
+	uint if_type;
+	int ret = 0;
 
 	dev = (ad7616_dev *)malloc(sizeof(*dev));
 	if (!dev) {
