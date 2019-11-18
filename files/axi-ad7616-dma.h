@@ -3,11 +3,10 @@
 
 #include <linux/delay.h>
 #include <linux/kernel.h>
-// #include <stdint.h>
-// #include <unistd.h>
+
 #include "ad7616.h"
 #include <linux/gpio/consumer.h>
-// #include "ad7616_core.h"
+
 #include "spi_engine_linux.h"
 #include <linux/dma-mapping.h>
 #include <linux/dmaengine.h>

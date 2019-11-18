@@ -387,7 +387,7 @@ err_ref_clk_disable:
 
 int32_t spi_engine_write_and_read(struct spi_master *master, uint8_t ss,
                                   uint8_t *data, uint8_t bytes_number) {
-  uint32_t expected_id = 0;
+  // uint32_t expected_id = 0;
   uint32_t i;
   struct spi_message *msg;
   struct spi_transfer *xfer;
@@ -438,3 +438,8 @@ int32_t spi_engine_write_and_read(struct spi_master *master, uint8_t ss,
 
   return 0;
 }
+
+MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("AIRS AXI AD7616 DMA driver");
+MODULE_AUTHOR("Johnny, AIRS.");
+MODULE_VERSION("1.00a");

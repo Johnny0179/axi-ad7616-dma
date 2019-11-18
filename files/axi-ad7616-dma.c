@@ -33,6 +33,7 @@
 #include <linux/sched.h>
 #include <linux/slab.h>
 
+
 #define SPI_AD7616_CS 0
 
 /******************************************************************************/
@@ -354,7 +355,7 @@ struct file_operations axi_adc_fops = {.owner = THIS_MODULE,
                                        .unlocked_ioctl = axi_adc_dma_ioctl,
                                        .release = axi_adc_dma_release};
 
-static int axi_adc_remove(struct platform_device *pdev) {
+static int axi_ad7616_dma_remove(struct platform_device *pdev) {
   int i;
   for (i = 0; i < dev_index; i++) {
     device_destroy(axi_adc_class, MKDEV(MAJOR(devno), i));
@@ -376,11 +377,14 @@ static int axi_adc_remove(struct platform_device *pdev) {
   return SUCCESS;
 }
 
-static int axi_adc_probe(struct platform_device *pdev) {
+static int axi_ad7616_dma_probe(struct platform_device *pdev) {
   int ret = 0, i = 0;
   struct device_node *node = NULL;
   struct spi_master *master;
   struct resource *res;
+  struct device *dev=&pdev->dev;
+
+  dev_info(dev, "Enter Device Tree Probing\n");
 
   /* spi engine interrupt */
   int irq;
@@ -489,7 +493,7 @@ static int axi_adc_probe(struct platform_device *pdev) {
   ad7616_reset();
 
   /* ad7616 device setup */
-  ad7616_setup(axi_adc_dev, default_init_param);
+  ad7616_setup(default_init_param);
 
   dev_info(&pdev->dev, "AXI AD7616 configured!\n");
 
@@ -503,26 +507,42 @@ fail1:
   kfree(axi_adc_dev);
 }
 
-static const struct of_device_id axi_ad7616_dma_of_ids[] = {
-    {
-        .compatible = "airs,axi-ad7616-dma",
-    },
+static struct of_device_id axi_ad7616_dma_of_match[] = {
+	{ .compatible = "xlnx,axi-ad7616-1.0", },
+	{ /* end of list */ },
 };
+MODULE_DEVICE_TABLE(of, axi_ad7616_dma_of_match);
 
 static struct platform_driver axi_ad7616_dma_of_driver = {
     .driver =
         {
             .name = MODULE_NAME,
             .owner = THIS_MODULE,
-            .of_match_table = axi_ad7616_dma_of_ids,
+            .of_match_table = axi_ad7616_dma_of_match,
         },
-    .probe = axi_adc_probe,
-    .remove = axi_adc_remove,
+    .probe = axi_ad7616_dma_probe,
+    .remove = axi_ad7616_dma_remove,
 };
 
-module_platform_driver(axi_ad7616_dma_of_driver);
+static int __init axi_ad7616_dma_init(void)
+{
+	printk("<1>Hello module world.\n");
+	return platform_driver_register(&axi_ad7616_dma_of_driver);
+}
 
-MODULE_LICENSE("GPL v2");
+
+static void __exit axi_ad7616_dma_exit(void)
+{
+	platform_driver_unregister(&axi_ad7616_dma_of_driver);
+	printk(KERN_ALERT "Goodbye module world.\n");
+}
+
+module_init(axi_ad7616_dma_init);
+module_exit(axi_ad7616_dma_exit);
+
+// module_platform_driver(axi_ad7616_dma_of_driver);
+
+MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("AIRS AXI AD7616 DMA driver");
 MODULE_AUTHOR("Johnny, AIRS.");
 MODULE_VERSION("1.00a");

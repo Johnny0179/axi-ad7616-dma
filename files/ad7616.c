@@ -445,3 +445,7 @@ int ad7616_set_oversampling_ratio(struct spi_master *master,struct ad7616_dev *d
 } */
 
 
+MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("AIRS AXI AD7616 DMA driver");
+MODULE_AUTHOR("Johnny, AIRS.");
+MODULE_VERSION("1.00a");
